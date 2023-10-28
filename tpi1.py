@@ -24,21 +24,29 @@ class OrderDelivery(SearchDomain):
                actlist += [(C2,C1)]
         return actlist 
 
-    def result(self,state,action):
-        #IMPLEMENT HERE
-        pass
+    def result(self, state, action):
+        new_city = action[1]
+        visited_cities = state[1] + [new_city]
+        return new_city, visited_cities
 
     def satisfies(self, state, goal):
-        #IMPLEMENT HERE
-        pass
+        # The goal is reached if all target cities have been visited and the delivery is back at the start city
+        print(state[0], goal[0])
+        print(set(state[1]), set(goal[1]))
+        return state[0] == goal[0] and set(state[1]) == set(goal[1])
 
     def cost(self, state, action):
-        #IMPLEMENT HERE
-        pass
+        for (C1, C2, Cost) in self.connections:
+            if ((C1, C2) == action or (C2, C1) == action):
+                return Cost
 
     def heuristic(self, state, goal):
-        #IMPLEMENT HERE
-        pass
+        x1, y1 = self.coordinates[state[0]]
+        x2, y2 = self.coordinates[goal[0]]
+        return math.sqrt((x2-x1)**2 + (y2-y1)**2)
+
+
+    
 
 
  
@@ -60,6 +68,7 @@ class MyNode(SearchNode):
         if self.parent.state == newstate:
             return True
         return self.parent.in_parent(newstate)
+        
 
 
 class MyTree(SearchTree):
@@ -71,6 +80,7 @@ class MyTree(SearchTree):
         self.open_nodes = [root]
         self.terminals = 0
         self.maxsize = maxsize
+        self.totalNodes = 0
 
     def astar_add_to_open(self,lnewnodes):
         for node in lnewnodes:
@@ -95,12 +105,16 @@ class MyTree(SearchTree):
                     lnewnodes.append(newnode)
 
                     newnode.eval = newnode.cost + newnode.heuristic
-                    node.children.append(newnode)
+                    node.children.append(newnode)  
+                    self.totalNodes += 1
 
             self.add_to_open(lnewnodes)
             self.manage_memory()
 
         return None
+    
+    
+    
 
     def manage_memory(self):
         if self.strategy != 'A*' or self.maxsize is None:
@@ -110,6 +124,8 @@ class MyTree(SearchTree):
             nodeToDel = self.open_nodes.pop(-1)
             nodeToDel.markedForDel = True
 
+            print("Node to delete: ", nodeToDel.state)
+            print("total nodes: ", self.totalNodes)
             allToDel = True
             for brother in nodeToDel.parent.children:
                 if brother.markedForDel == False:
@@ -123,13 +139,8 @@ class MyTree(SearchTree):
                     
 
             
+def orderdelivery_search(domain, city, targetcities, strategy='breadth', maxsize=None):
+    #ADD YOUR CODE HERE
 
-
- 
+    pass
     # if needed, auxiliary methods can be added here
-
-
-# If needed, auxiliary functions can be added here
-
-
-
