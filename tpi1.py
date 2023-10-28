@@ -6,6 +6,7 @@
 
 from tree_search import *
 import math
+
 class OrderDelivery(SearchDomain):
 
     def __init__(self,connections, coordinates):
@@ -24,15 +25,19 @@ class OrderDelivery(SearchDomain):
         return actlist 
 
     def result(self,state,action):
+        #IMPLEMENT HERE
         pass
 
     def satisfies(self, state, goal):
+        #IMPLEMENT HERE
         pass
-    
+
     def cost(self, state, action):
+        #IMPLEMENT HERE
         pass
 
     def heuristic(self, state, goal):
+        #IMPLEMENT HERE
         pass
 
 
