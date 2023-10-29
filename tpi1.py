@@ -12,8 +12,8 @@ class OrderDelivery(SearchDomain):
     def __init__(self,connections, coordinates):
         self.connections = connections
         self.coordinates = coordinates
-        # ANY NEEDED CODE CAN BE ADDED HERE
-
+        # ANY NEEDED CODE CAN BE ADDED HERE     
+        # 
     def actions(self,state):
         city = state[0]
         actlist = []
@@ -25,31 +25,35 @@ class OrderDelivery(SearchDomain):
         return actlist 
 
     def result(self, state, action):
-        new_city = action[1]
-        visited_cities = state[1] + [new_city]
-        return new_city, visited_cities
+        (C1, C2) = action
+        citys = [city for city in state[1] if city != C1]
+        
+        if C1 == state[0]:
+            new_state = (C2, citys)
+            return new_state
 
     def satisfies(self, state, goal):
-        # The goal is reached if all target cities have been visited and the delivery is back at the start city
-        print(state[0], goal[0])
-        print(set(state[1]), set(goal[1]))
-        return state[0] == goal[0] and set(state[1]) == set(goal[1])
+        return state[0] == goal and not state[1]
 
     def cost(self, state, action):
-        for (C1, C2, Cost) in self.connections:
-            if ((C1, C2) == action or (C2, C1) == action):
-                return Cost
+        for (C1, C2, D) in self.connections:
+            if (C1, C2) == action or (C2, C1) == action:
+                return D
 
     def heuristic(self, state, goal):
-        x1, y1 = self.coordinates[state[0]]
-        x2, y2 = self.coordinates[goal[0]]
-        return math.sqrt((x2-x1)**2 + (y2-y1)**2)
-
+        cost = 0
+        for city in state[1]:
+            for (C1, C2, D) in self.connections:
+                if (C1, C2) == (state[0], city) or (C2, C1) == (state[0], city):
+                    cost += D
+                    break
+            for (C1, C2, D) in self.connections:
+                if (C1, C2) == (city, goal) or (C2, C1) == (city, goal):
+                    cost += D
+                    break
+        return cost
 
     
-
-
- 
 class MyNode(SearchNode):
 
     def __init__(self,state,parent,arg3=None,arg4=None,arg5=None,arg6=None):
@@ -59,7 +63,6 @@ class MyNode(SearchNode):
         self.cost = arg4
         self.heuristic = arg5
         self.eval = arg6
-        self.children = []
         self.markedForDel = False
     
     def in_parent(self, newstate):
@@ -80,7 +83,6 @@ class MyTree(SearchTree):
         self.open_nodes = [root]
         self.terminals = 0
         self.maxsize = maxsize
-        self.totalNodes = 0
 
     def astar_add_to_open(self,lnewnodes):
         for node in lnewnodes:
@@ -101,46 +103,42 @@ class MyTree(SearchTree):
             for a in self.problem.domain.actions(node.state):
                 newstate = self.problem.domain.result(node.state,a)
                 if not node.in_parent(newstate):
-                    newnode = MyNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate, self.problem.goal))
+                    newnode = MyNode(newstate,node, node.depth + 1, node.cost + self.problem.domain.cost(node.state, a), self.problem.domain.heuristic(newstate, self.problem.goal), node.cost + self.problem.domain.cost(node.state, a) + self.problem.domain.heuristic(newstate, self.problem.goal))
                     lnewnodes.append(newnode)
-
-                    newnode.eval = newnode.cost + newnode.heuristic
-                    node.children.append(newnode)  
-                    self.totalNodes += 1
-
-            self.add_to_open(lnewnodes)
+                    
             self.manage_memory()
+            self.add_to_open(lnewnodes)
 
         return None
-    
-    
-    
 
     def manage_memory(self):
         if self.strategy != 'A*' or self.maxsize is None:
             return  
-            
-        while len(self.open_nodes) > self.maxsize:
-            nodeToDel = self.open_nodes.pop(-1)
-            nodeToDel.markedForDel = True
-
-            print("Node to delete: ", nodeToDel.state)
-            print("total nodes: ", self.totalNodes)
-            allToDel = True
-            for brother in nodeToDel.parent.children:
-                if brother.markedForDel == False:
-                    allToDel = False
+                
+        while self.terminals + self.non_terminals > self.maxsize:
+            for node in reversed(self.open_nodes):
+                if node.markedForDel == False:
+                    node.markedForDel = True
+                    nodeToDel = node
                     break
 
-            if allToDel:
-                for brother in nodeToDel.parent.children:
-                    if brother in self.open_nodes: 
-                        self.open_nodes.remove(brother)
-                    
+            if nodeToDel.parent == None:
+                return
 
+            brothers = []
+            for n in self.open_nodes:
+                if n.parent == nodeToDel.parent:
+                    brothers.append(n)
+
+            if all(node.markedForDel for node in brothers):
+                for node in brothers:
+                    self.open_nodes.remove(node)
+                nodeToDel.parent.eval = min(node.eval for node in brothers)
+                self.non_terminals -= 1
+                
             
 def orderdelivery_search(domain, city, targetcities, strategy='breadth', maxsize=None):
-    #ADD YOUR CODE HERE
-
-    pass
-    # if needed, auxiliary methods can be added here
+    p = SearchProblem(domain, (city, targetcities), city)
+    t = MyTree(p, strategy, maxsize)
+    path = t.search2()
+    return t, [city for city, _ in path]
