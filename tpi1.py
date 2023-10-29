@@ -27,10 +27,8 @@ class OrderDelivery(SearchDomain):
     def result(self, state, action):
         (C1, C2) = action
         citys = [city for city in state[1] if city != C1]
-        
         if C1 == state[0]:
-            new_state = (C2, citys)
-            return new_state
+            return (C2, citys)
 
     def satisfies(self, state, goal):
         return state[0] == goal and not state[1]
