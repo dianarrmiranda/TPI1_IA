@@ -40,17 +40,17 @@ class OrderDelivery(SearchDomain):
                 return D
 
     def heuristic(self, state, goal):
-        cost = 0
-        for city in state[1]:
-            for (C1, C2, D) in self.connections:
-                if (C1, C2) == (state[0], city) or (C2, C1) == (state[0], city):
-                    cost += D
-                    break
-            for (C1, C2, D) in self.connections:
-                if (C1, C2) == (city, goal) or (C2, C1) == (city, goal):
-                    cost += D
-                    break
-        return cost
+        atualCity, citiesLeft = state
+        if not citiesLeft:
+            return self.distance(atualCity, goal)
+        g_n = sum(self.distance(atualCity, city) for city in state[1])
+        h_n = self.distance(atualCity, goal)
+        return g_n + h_n
+
+    def distance(self, city, goal):
+        x1, y1 = self.coordinates[city]
+        x2, y2 = self.coordinates[goal]
+        return math.sqrt((x1 - x2)**2 + (y1 - y2)**2)
 
     
 class MyNode(SearchNode):
