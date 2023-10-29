@@ -2,6 +2,7 @@
 #STUDENT NUMBER: 107457
 
 #DISCUSSED TPI-1 WITH: (names and numbers):
+#107927 - Ruben Garrido
 
 
 from tree_search import *
@@ -13,7 +14,7 @@ class OrderDelivery(SearchDomain):
         self.connections = connections
         self.coordinates = coordinates
         # ANY NEEDED CODE CAN BE ADDED HERE     
-        # 
+        
     def actions(self,state):
         city = state[0]
         actlist = []
